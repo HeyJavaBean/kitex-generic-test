@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package hello;
+option go_package="hello/cloudwego/team";
+
+message MyReq {
+  string name = 1;
+  string id = 2;
+}
+
+message MyResp {
+   string text = 1;
+}
+
+service greet {
+  rpc Hello (MyReq) returns (MyResp);
+}

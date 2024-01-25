@@ -1,0 +1,1 @@
+kitex -module generic-kitex-test example.thrift
