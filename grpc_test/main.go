@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"generic-kitex-test/grpc_test/kitex_gen/hello/cloudwego/team"
 	"generic-kitex-test/grpc_test/kitex_gen/hello/cloudwego/team/greet"
+	"github.com/cloudwego/fastpb"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/callopt"
 	"github.com/cloudwego/kitex/client/genericclient"
@@ -24,7 +26,7 @@ func (g *GreetImpl) Hello(ctx context.Context, req *team.MyReq) (r *team.MyResp,
 }
 
 func RunServer() {
-	addr, _ := net.ResolveTCPAddr("tcp", "localhost:8888")
+	addr, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:23333")
 	s := greet.NewServer(&GreetImpl{}, server.WithServiceAddr(addr))
 	s.Run()
 }
@@ -39,18 +41,18 @@ func main() {
 	normalClientCall()
 	fmt.Println("\nbinary")
 	binaryGenericCall()
-	fmt.Println("\njson")
+	/*fmt.Println("\njson")
 	jsonGenericCall()
 	fmt.Println("\nmap")
-	mapGenericCall()
+	mapGenericCall()*/
 }
 
 func clientOptionsSuite() []client.Option {
-	return []client.Option{client.WithHostPorts("hostport:8888"), client.WithTransportProtocol(transport.GRPC)}
+	return []client.Option{client.WithTransportProtocol(transport.GRPC), client.WithHostPorts("127.0.0.1:23333")}
 }
 
 func jsonGenericCall() {
-
+	//todo
 	p, err := generic.NewThriftFileProvider("./thrift_test/example.thrift")
 	if err != nil {
 		panic(err)
@@ -70,7 +72,7 @@ func jsonGenericCall() {
 		"id":   "789",
 	}
 	`
-	result, err := genericCli.GenericCall(context.Background(), methodName, jsonData)
+	result, err := genericCli.GenericCall(context.Background(), methodName, jsonData, callopt.WithHostPort("127.0.0.1:23333"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -78,7 +80,7 @@ func jsonGenericCall() {
 }
 
 func mapGenericCall() {
-
+	//todo
 	p, err := generic.NewThriftFileProvider("./thrift_test/example.thrift")
 	if err != nil {
 		panic(err)
@@ -105,34 +107,31 @@ func mapGenericCall() {
 }
 
 func binaryGenericCall() {
-	// todo
-	genericCli, err := genericclient.NewClient("a.b.c", generic.BinaryGrpcGeneric(), clientOptionsSuite()...)
+	genericCli, err := genericclient.NewClient("a.b.c", generic.BinaryGrpcGeneric("hello.greet"), clientOptionsSuite()...)
 
 	// 要用 method 封装的结构体
-	args := &team.MyReq{
-		Name: "hello",
-		Id:   "0000",
+	var args interface{}
+	args = &team.MyReq{
+		Name: "Lee",
+		Id:   "123",
 	}
-	var buf []byte
-	// todo mock buffer
 
-	if err != nil {
-		return
+	msg, ok := args.(fastpb.Writer)
+	if !ok {
+		panic("?")
 	}
-	result, err := genericCli.GenericCall(context.Background(), methodName, buf, callopt.WithHostPort("localhost:8888"))
+	buf := make([]byte, msg.Size())
+	msg.FastWrite(buf)
+	println("input buf:" + hex.EncodeToString(buf))
+
+	methodName := "Hello"
+	result, err := genericCli.GenericCall(context.Background(), methodName, buf)
 	// 实际上 uint8
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("rpc err != nil:" + err.Error())
 	}
-	fmt.Println("raw binary resp :", result)
-	respStruct := &team.MyResp{}
-	method, seq, err := codec.Decode(result.([]byte), respStruct)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("method :", method)
-	fmt.Println("seq :", seq)
-	fmt.Println("result :", respStruct)
+	fmt.Println("raw binary resp :", result.([]byte))
+	println("resp string:" + string(result.([]byte)))
 }
 
 func normalClientCall() {

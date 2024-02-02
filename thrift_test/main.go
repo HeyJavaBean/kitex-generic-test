@@ -67,7 +67,7 @@ func jsonGenericCall() {
 		"id":   "789",
 	}
 	`
-	result, err := genericCli.GenericCall(context.Background(), methodName, jsonData, callopt.WithHostPort("localhost:8888"))
+	result, err := genericCli.GenericCall(context.Background(), methodName, jsonData, callopt.WithHostPort("127.0.0.1:8888"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -94,7 +94,7 @@ func mapGenericCall() {
 		"id":   "123",
 	}
 
-	result, err := genericCli.GenericCall(context.Background(), methodName, mapData, callopt.WithHostPort("localhost:8888"))
+	result, err := genericCli.GenericCall(context.Background(), methodName, mapData, callopt.WithHostPort("127.0.0.1:8888"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -118,7 +118,7 @@ func binaryGenericCall() {
 	if err != nil {
 		return
 	}
-	result, err := genericCli.GenericCall(context.Background(), methodName, buf, callopt.WithHostPort("localhost:8888"))
+	result, err := genericCli.GenericCall(context.Background(), methodName, buf, callopt.WithHostPort("127.0.0.1:8888"))
 	// 实际上 uint8
 	if err != nil {
 		fmt.Println(err)
@@ -136,7 +136,7 @@ func binaryGenericCall() {
 
 func normalClientCall() {
 
-	cli, _ := greet.NewClient("a.b.c", client.WithHostPorts("localhost:8888"))
+	cli, _ := greet.NewClient("a.b.c", client.WithHostPorts("127.0.0.1:8888"))
 	resp, err := cli.Hello(context.Background(), &team.MyReq{
 		Name: "Lee",
 		Id:   "123",
